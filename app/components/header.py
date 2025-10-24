@@ -323,7 +323,6 @@ def header(current_page: str = ''):
 
             ui.link('Home', '/').classes(f'top-nav-link {home_classes}')
             ui.link('About Us', '/about').classes(f'top-nav-link {about_classes}')
-            ui.link('Browse Jobs', '/jobs').classes(f'top-nav-link {jobs_classes}')
             ui.link('How it works', '/how-it-works').classes(f'top-nav-link {how_classes}')
 
             # Resources hover dropdown
@@ -340,6 +339,7 @@ def header(current_page: str = ''):
                     resource_links = [
                         {'name': 'Contact Us', 'path': '/contact'},
                         {'name': 'Trainings/Bootcamps', 'path': '/training-program-directory'},
+                        {'name': 'Success Stories', 'path': '/candidates/success-stories'},
                         {'name': 'Help & Support', 'path': '/help-and-support'},
                     ]
                     ui.html(
@@ -347,7 +347,7 @@ def header(current_page: str = ''):
                         <div class="flex flex-col p-2">
                             {(''.join(f'<a href="{link["path"]}" class="nav-dropdown-btn {"active" if current_page == link["path"] else ""}">{link["name"]}</a>' for link in resource_links))}
                         </div>
-                        ''')
+                        ''', sanitize=lambda s: s)
 
             # Contact link removed (now available under Resources dropdown)
 
@@ -374,7 +374,6 @@ def header(current_page: str = ''):
                             ui.menu_item('Admin Dashboard', on_click=lambda: ui.navigate.to('/admin/dashboard'))
                         elif user_role == 'TRAINEE':
                             ui.menu_item('My Dashboard', on_click=lambda: ui.navigate.to('/candidates/dashboard'))
-                            ui.menu_item('My Applications', on_click=lambda: ui.navigate.to('/application-tracking'))
                         elif user_role == 'EMPLOYER':
                             ui.menu_item('Employer Dashboard', on_click=lambda: ui.navigate.to('/employers/dashboard'))
                             ui.menu_item('Job Postings', on_click=lambda: ui.navigate.to('/employer/job-posting'))
@@ -384,4 +383,20 @@ def header(current_page: str = ''):
                         ui.separator()
                         ui.menu_item(f'Logout ({user_name})', on_click=logout)
 
-                    ui.icon('account_circle', size='1.5rem').classes('cursor-pointer text-gray-600 hover:text-blue-600').on('click', menu.open)
+                    # Show user profile image or initials
+                    # Try to get profile picture from user data
+                    profile_pic_url = ''
+                    if user:
+                        # Check if user has traineeProfile with profilePictureUrl
+                        trainee_profile = user.get('traineeProfile', {})
+                        profile_pic_url = trainee_profile.get('profilePictureUrl', '') if trainee_profile else ''
+                    
+                    if profile_pic_url and profile_pic_url.strip():
+                        # Show profile image
+                        with ui.element('div').style('width: 36px; height: 36px; border-radius: 50%; overflow: hidden; border: 2px solid #0055B8; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.15);').on('click', menu.open):
+                            ui.image(profile_pic_url).style('width: 100%; height: 100%; object-fit: cover; object-position: center;')
+                    else:
+                        # Show initials in a circle
+                        initials = ''.join([n[0].upper() for n in user_name.split()[:2]])
+                        with ui.element('div').style('width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #0055B8 0%, #0066CC 100%); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px; cursor: pointer; box-shadow: 0 2px 6px rgba(0,85,184,0.3);').on('click', menu.open):
+                            ui.label(initials)
